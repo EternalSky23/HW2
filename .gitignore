@@ -107,3 +107,7 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Unity Asset Store Goblins
+/Assets/Goblins*/
+/Assets/Goblins*.meta
