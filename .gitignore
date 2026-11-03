@@ -111,3 +111,9 @@ InitTestScene*.unity*
 # Unity Asset Store Goblins
 /Assets/Goblins*/
 /Assets/Goblins*.meta
+
+# Licensed third-party player sources are downloaded by each collaborator.
+/Assets/BodyGuards/
+/Assets/BodyGuards.meta
+/Assets/Player/Animations/*.fbx
+/Assets/Player/Animations/*.fbx.meta
