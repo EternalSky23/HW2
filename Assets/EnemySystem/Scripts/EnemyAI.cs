@@ -14,6 +14,7 @@ public class EnemyAI : MonoBehaviour
     [Header("Attack Settings")]
     public float attackCooldown = 2f;
     public float attackDuration = 1f;
+    public float attackDamage = 5f;
 
     [Header("Ranged Attack")]
     public bool isRanged = false;
@@ -122,6 +123,11 @@ public class EnemyAI : MonoBehaviour
 
                 nextAttackTime =
                     Time.time + attackCooldown;
+
+                if (!isRanged && !isHeavy)
+                {
+                    GameManager.TakeDamage(attackDamage);
+                }
             }
 
             return;
@@ -195,6 +201,7 @@ public class EnemyAI : MonoBehaviour
         if (projectile != null)
         {
             projectile.Launch(player);
+            projectile.damage = attackDamage;
         }
     }
 

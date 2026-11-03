@@ -213,6 +213,9 @@ MonoBehaviour:
   jumpHeight: 1.5
   gravity: -9.81
   cameraTransform: {fileID: 0}
+  damage: 15
+  projectilePrefab: {fileID: 0}
+  maxDistance: 20
 --- !u!1 &705709941702561238
 GameObject:
   m_ObjectHideFlags: 0

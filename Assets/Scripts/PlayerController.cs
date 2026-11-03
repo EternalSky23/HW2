@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -11,6 +12,11 @@ public class PlayerController : MonoBehaviour
 
     [Header("Camera")]
     public Transform cameraTransform;
+
+    [Header("Attacking")]
+    public float damage = 10f;
+    public GameObject projectilePrefab;
+    public float maxDistance = 20f;
 
     private CharacterController controller;
     private Animator animator;
@@ -64,6 +70,30 @@ public class PlayerController : MonoBehaviour
             animator.SetFloat(SpeedId, input.magnitude, 0.12f, Time.deltaTime);
             animator.SetBool(GroundedId, grounded);
             animator.SetFloat(VerticalSpeedId, verticalSpeed);
+        }
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+            RaycastHit raycastHit;
+            Vector3 target;
+
+            if (Physics.Raycast(ray, out raycastHit, maxDistance))
+            {
+                target = raycastHit.point;
+            }
+            else
+            {
+                target = ray.GetPoint(maxDistance);
+            }
+
+            Vector3 firepoint = transform.position + 0.3f * transform.forward;
+            GameObject projectile = Instantiate(projectilePrefab, firepoint, Quaternion.identity);
+            Vector3 direction = (target - firepoint).normalized;
+
+            Bullet b = projectile.GetComponent<Bullet>();
+            b.direction = direction;
+            b.damage = damage;
         }
     }
 }

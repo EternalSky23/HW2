@@ -24,8 +24,8 @@ public class EnemyShockwave : MonoBehaviour
                 Debug.Log(
                     "Shockwave hit Player! Damage: " + damage
                 );
+                GameManager.TakeDamage(damage);
 
-                // 之後可以在這裡加入玩家扣血程式
                 break;
             }
         }

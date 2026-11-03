@@ -9,7 +9,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1801245584569282, guid: 3405ec0aed0f19e47809da22ea435bc7, type: 3}
       propertyPath: m_Name
-      value: goblin_2
+      value: Enemy2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1801245584569282, guid: 3405ec0aed0f19e47809da22ea435bc7, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 4478122381703152, guid: 3405ec0aed0f19e47809da22ea435bc7, type: 3}
       propertyPath: m_RootOrder
@@ -68,6 +72,20 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1412744513117368859}
   m_PrefabAsset: {fileID: 0}
+--- !u!136 &2480378284738120971
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1413415185527767513}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 1.6
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.8, z: 0}
 --- !u!114 &154053231
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -94,13 +112,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
-  detectionRange: 12
-  attackRange: 7
+  detectionRange: 28
+  attackRange: 15
   attackCooldown: 2.5
   attackDuration: 1
+  attackDamage: 5
   isRanged: 1
   projectilePrefab: {fileID: 9131310468666842632, guid: ba1539cfb1a29e348a75c63eaff63be0,
     type: 3}
+  isHeavy: 0
+  shockwavePrefab: {fileID: 0}
 --- !u!195 &154053233
 NavMeshAgent:
   m_ObjectHideFlags: 0
