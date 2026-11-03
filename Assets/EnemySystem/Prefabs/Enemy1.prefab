@@ -9,7 +9,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1127377891407408, guid: ab4059f525d7caf4f875c1b5debf9360, type: 3}
       propertyPath: m_Name
-      value: goblin
+      value: Enemy1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1127377891407408, guid: ab4059f525d7caf4f875c1b5debf9360, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 4134988860844432, guid: ab4059f525d7caf4f875c1b5debf9360, type: 3}
       propertyPath: m_RootOrder
@@ -108,10 +112,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
-  detectionRange: 10
-  attackRange: 1.8
+  detectionRange: 30
+  attackRange: 2
   attackCooldown: 2
   attackDuration: 1
+  attackDamage: 5
+  isRanged: 0
+  projectilePrefab: {fileID: 0}
+  isHeavy: 0
+  shockwavePrefab: {fileID: 0}
 --- !u!114 &600488745
 MonoBehaviour:
   m_ObjectHideFlags: 0
