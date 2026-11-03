@@ -1,68 +1,69 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    [Header("移動設定")]
+    [Header("Movement")]
     public float moveSpeed = 6f;
-    public float turnSmoothTime = 0.1f; // 轉向平滑時間
+    public float turnSmoothTime = 0.1f;
+    public float jumpHeight = 1.5f;
     public float gravity = -9.81f;
 
-    [Header("相機參考")]
+    [Header("Camera")]
     public Transform cameraTransform;
 
     private CharacterController controller;
-    private Vector3 velocity;
+    private Animator animator;
+    private float verticalSpeed;
     private float turnSmoothVelocity;
-    private bool isGrounded;
 
-    void Start()
+    private static readonly int SpeedId = Animator.StringToHash("Speed");
+    private static readonly int GroundedId = Animator.StringToHash("Grounded");
+    private static readonly int VerticalSpeedId = Animator.StringToHash("VerticalSpeed");
+
+    private void Awake()
     {
         controller = GetComponent<CharacterController>();
-
-        // 自動抓取 Main Camera
-        if (cameraTransform == null && Camera.main != null)
-        {
-            cameraTransform = Camera.main.transform;
-        }
+        animator = GetComponentInChildren<Animator>();
+        if (animator != null) animator.applyRootMotion = false;
     }
 
-    void Update()
+    private void Update()
     {
-        // 1. 地面偵測與下壓微力
-        isGrounded = controller.isGrounded;
-        if (isGrounded && velocity.y < 0)
+        if (cameraTransform == null && Camera.main != null)
+            cameraTransform = Camera.main.transform;
+
+        bool grounded = controller.isGrounded;
+        if (grounded && verticalSpeed < 0f)
+            verticalSpeed = -2f;
+
+        Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0f,
+            Input.GetAxisRaw("Vertical")).normalized;
+        Vector3 horizontalMotion = Vector3.zero;
+
+        if (input.sqrMagnitude > 0.01f)
         {
-            velocity.y = -2f;
+            float cameraYaw = cameraTransform != null ? cameraTransform.eulerAngles.y : 0f;
+            float targetYaw = Mathf.Atan2(input.x, input.z) * Mathf.Rad2Deg + cameraYaw;
+            float yaw = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetYaw,
+                ref turnSmoothVelocity, turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            horizontalMotion = Quaternion.Euler(0f, targetYaw, 0f) * Vector3.forward * moveSpeed;
         }
 
-        // 2. 讀取鍵盤輸入
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+        if (grounded && Input.GetButtonDown("Jump"))
+            verticalSpeed = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
-        // 3. 移動與轉向運算
-        if (direction.magnitude >= 0.1f)
+        verticalSpeed += gravity * Time.deltaTime;
+        CollisionFlags collisions = controller.Move(
+            (horizontalMotion + Vector3.up * verticalSpeed) * Time.deltaTime);
+        grounded = (collisions & CollisionFlags.Below) != 0;
+
+        if (animator != null)
         {
-            // 計算相機面向水平方向的旋轉角度 (Yaw)
-            float camAngle = cameraTransform != null ? cameraTransform.eulerAngles.y : 0f;
-
-            // 計算玩家應該面向的目標角度：輸入方向角 + 相機水平角
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + camAngle;
-
-            // 平滑插值旋轉角，避免 180 度反向自轉死循環
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
-
-            // 將角度轉為前進向量並移動
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDir.normalized * moveSpeed * Time.deltaTime);
+            animator.SetFloat(SpeedId, input.magnitude, 0.12f, Time.deltaTime);
+            animator.SetBool(GroundedId, grounded);
+            animator.SetFloat(VerticalSpeedId, verticalSpeed);
         }
-
-        // 4. 施加重力
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
     }
 }
