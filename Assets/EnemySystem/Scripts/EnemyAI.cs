@@ -124,7 +124,10 @@ public class EnemyAI : MonoBehaviour
                 nextAttackTime =
                     Time.time + attackCooldown;
 
-                GameManager.TakeDamage(attackDamage);
+                if (!isRanged)
+                {
+                    GameManager.TakeDamage(attackDamage);
+                }
             }
 
             return;
