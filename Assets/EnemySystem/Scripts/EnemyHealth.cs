@@ -54,6 +54,8 @@ public class EnemyHealth : MonoBehaviour
 
         Debug.Log(gameObject.name + " died!");
 
+        GameManager.OnEnemyKilled();
+
         // 停止 AI
         if (enemyAI != null)
         {
