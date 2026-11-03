@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RectTransform healthBar;
     [SerializeField] private TextMeshProUGUI timerText;    
     [SerializeField] private TextMeshProUGUI enemyCounterText; 
+    [SerializeField] private GameObject gameEndForeground;
 
     private float healthBarMaxWidth = 220f;
 
@@ -55,6 +56,7 @@ public class GameManager : MonoBehaviour
     {
         RefreshUIReferences();
         InitStage();
+        UpdateHealthBar();
     }
 
     // Update is called once per frame
@@ -88,8 +90,14 @@ public class GameManager : MonoBehaviour
 
         if (healthBar == null)
         {
-            GameObject hpObj = GameObject.Find("HealthBarFill");
+            GameObject hpObj = GameObject.Find("Health");
             if (hpObj != null) healthBar = hpObj.GetComponent<RectTransform>();
+        }
+
+        if (gameEndForeground == null)
+        {
+            GameObject canvas = GameObject.Find("Canvas");
+            gameEndForeground = canvas.transform.Find("Foreground").gameObject;
         }
     }
 
@@ -98,7 +106,7 @@ public class GameManager : MonoBehaviour
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         remainingEnemies = enemies.Length;
         UpdateEnemyCounterUI();
-        Debug.Log($"場上找到的敵人數量: {enemies.Length}");
+        Debug.Log($"嚙踝蕭嚙磕嚙踝蕭鴘綽蕭臚H嚙複量: {enemies.Length}");
     }
 
     private void UpdateTimerUI()
@@ -131,7 +139,7 @@ public class GameManager : MonoBehaviour
         instance.UpdateHealthBar();
 
         if (instance.health <= 0) {
-            instance.GameOver();
+            instance.GameLose();
         }
     }
 
@@ -159,7 +167,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator StageClearRoutine()
     {
-        Debug.Log("本關所有敵人已消滅！準備前往下一關...");
+        Debug.Log("嚙踝蕭嚙踝蕭嚙課佗蕭嚙衝人嚙緩嚙踝蕭嚙踝蕭嚙瘢嚙褒備前嚙踝蕭嚙磊嚙瑾嚙踝蕭...");
         yield return new WaitForSeconds(2.0f);
 
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
@@ -171,17 +179,38 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("恭喜通關所有關卡！(Game Win)");
+            Debug.Log("Game Win");
             //Game Win UI
+            instance.GameOverHandle(true);
         }
     }
 
-    private void GameOver()
+    private void GameLose()
+    {
+        Debug.Log("Game Over");
+        //Game Over UI
+        instance.GameOverHandle(false);
+    }
+
+    private void GameOverHandle(bool win)
     {
         isGameActive = false;
-        Debug.Log("玩家死亡！Game Over");
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        //Game Over UI
+        gameEndForeground.SetActive(true);
+        if (win)
+        {
+            gameEndForeground.transform.Find("Win").gameObject.SetActive(true);
+        }
+        else
+        {
+            gameEndForeground.transform.Find("Lose").gameObject.SetActive(true);
+        }
+    }
+
+    public static void ReturnToTitle()
+    {
+        SceneManager.LoadScene("Start");
+        Destroy(instance.gameObject);
     }
 }

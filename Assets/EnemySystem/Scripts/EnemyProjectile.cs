@@ -7,6 +7,7 @@ public class EnemyProjectile : MonoBehaviour
     [Header("Projectile Settings")]
     public float speed = 8f;
     public float lifetime = 4f;
+    public float damage = 0f;
 
     private Rigidbody rb;
     private Vector3 direction;
@@ -55,8 +56,7 @@ public class EnemyProjectile : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Magic projectile hit Player!");
-
+            GameManager.TakeDamage(damage);
             Destroy(gameObject);
         }
     }

@@ -124,7 +124,7 @@ public class EnemyAI : MonoBehaviour
                 nextAttackTime =
                     Time.time + attackCooldown;
 
-                if (!isRanged)
+                if (!isRanged && !isHeavy)
                 {
                     GameManager.TakeDamage(attackDamage);
                 }
@@ -201,6 +201,7 @@ public class EnemyAI : MonoBehaviour
         if (projectile != null)
         {
             projectile.Launch(player);
+            projectile.damage = attackDamage;
         }
     }
 
