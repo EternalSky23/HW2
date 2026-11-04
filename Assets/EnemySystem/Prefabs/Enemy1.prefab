@@ -77,6 +77,20 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 5678660203809933960}
   m_PrefabAsset: {fileID: 0}
+--- !u!136 &4086228569690015869
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5677532826136984760}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 1.6
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.8, z: 0}
 --- !u!195 &600488743
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -117,10 +131,12 @@ MonoBehaviour:
   attackCooldown: 2
   attackDuration: 1
   attackDamage: 5
+  hitSFX: {fileID: 8300000, guid: 64fddbda6a9f5c246a0581a2e1617eca, type: 3}
   isRanged: 0
   projectilePrefab: {fileID: 0}
   isHeavy: 0
   shockwavePrefab: {fileID: 0}
+  heavyHitSFX: {fileID: 8300000, guid: fbb9d5b249c54974098c47b3ead83889, type: 3}
 --- !u!114 &600488745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -134,17 +150,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
---- !u!136 &4086228569690015869
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5677532826136984760}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 1.6
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.8, z: 0}

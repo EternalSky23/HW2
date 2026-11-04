@@ -4942,3 +4942,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 8
   lifetime: 4
+  damage: 0
+  hitSFX: {fileID: 8300000, guid: 5744fff04a976e346be29581c87c1fc8, type: 3}
