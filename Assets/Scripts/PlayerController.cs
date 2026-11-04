@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -20,6 +19,8 @@ public class PlayerController : MonoBehaviour
 
     private CharacterController controller;
     private Animator animator;
+    public PlayerActionAnimation Actions { get; private set; }
+    public int ProjectilesReleased { get; private set; }
     private float verticalSpeed;
     private float turnSmoothVelocity;
 
@@ -32,10 +33,13 @@ public class PlayerController : MonoBehaviour
         controller = GetComponent<CharacterController>();
         animator = GetComponentInChildren<Animator>();
         if (animator != null) animator.applyRootMotion = false;
+        Actions = GetComponent<PlayerActionAnimation>();
+        if (Actions == null) Actions = gameObject.AddComponent<PlayerActionAnimation>();
     }
 
     private void Update()
     {
+        if (!AdvancedGame.CanControl) return;
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
 
@@ -72,28 +76,36 @@ public class PlayerController : MonoBehaviour
             animator.SetFloat(VerticalSpeedId, verticalSpeed);
         }
 
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1")) TryThrow();
+    }
+
+    public bool TryThrow()
+    {
+        if (!AdvancedGame.CanControl || Actions.Busy || projectilePrefab == null || Camera.main == null) return false;
+        if (AdvancedGame.Instance != null && !AdvancedGame.Instance.Ammo.TryFire()) return false;
+        // Face the aim direction before winding up, including when standing still.
+        transform.rotation = Quaternion.Euler(0, Camera.main.transform.eulerAngles.y, 0);
+        return Actions.Throw(ReleaseStone);
+    }
+
+    private void ReleaseStone()
+    {
+        if (projectilePrefab == null || Camera.main == null) return;
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(.5f, .5f, 0));
+        Vector3 target = ray.GetPoint(maxDistance);
+        float closest = maxDistance;
+        foreach (var hit in Physics.RaycastAll(ray, maxDistance, ~0, QueryTriggerInteraction.Ignore))
         {
-            Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-            RaycastHit raycastHit;
-            Vector3 target;
-
-            if (Physics.Raycast(ray, out raycastHit, maxDistance))
-            {
-                target = raycastHit.point;
-            }
-            else
-            {
-                target = ray.GetPoint(maxDistance);
-            }
-
-            Vector3 firepoint = transform.position + 0.3f * transform.forward;
-            GameObject projectile = Instantiate(projectilePrefab, firepoint, Quaternion.identity);
-            Vector3 direction = (target - firepoint).normalized;
-
-            Bullet b = projectile.GetComponent<Bullet>();
-            b.direction = direction;
-            b.damage = damage;
+            if (hit.collider.GetComponentInParent<PlayerController>() != null || hit.distance >= closest) continue;
+            closest = hit.distance;
+            target = hit.point;
         }
+        Vector3 firepoint = Actions.ThrowHand != null ? Actions.ThrowHand.position + transform.forward * .18f :
+            transform.position + transform.forward * .5f;
+        var projectile = Instantiate(projectilePrefab, firepoint, Quaternion.identity);
+        var bullet = projectile.GetComponent<Bullet>();
+        bullet.direction = (target - firepoint).normalized;
+        bullet.damage = damage;
+        ProjectilesReleased++;
     }
 }

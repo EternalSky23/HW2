@@ -1,54 +1,54 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public Vector3 direction = new Vector3(0, 0, 0);
+    public Vector3 direction;
     public float speed = 100f;
     public float timeAlive = 5f;
-    public float damage = 0f;
+    public float damage;
     public GameObject particleEffect;
     public AudioClip hitSFX;
-
     private float destroyTime;
-
-    // Start is called before the first frame update
-    void Start()
+    private bool hit;
+    private void Start() { destroyTime = Time.time + timeAlive; }
+    private void Update()
     {
-        destroyTime = Time.time + timeAlive;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        while (Time.time < destroyTime)
+        if (hit) return;
+        if (Time.time >= destroyTime) { Destroy(gameObject); return; }
+        Vector3 displacement = direction * speed * Time.deltaTime;
+        // Sweep the movement to avoid tunnelling through a crate at high speed.
+        Collider closest = null;
+        float distance = float.PositiveInfinity;
+        foreach (var collision in Physics.RaycastAll(transform.position, direction, displacement.magnitude,
+            ~0, QueryTriggerInteraction.Ignore))
         {
-            transform.Translate(direction * speed * Time.deltaTime);
+            if (collision.collider.GetComponentInParent<PlayerController>() != null || collision.distance >= distance) continue;
+            closest = collision.collider;
+            distance = collision.distance;
+        }
+        if (closest != null)
+        {
+            transform.position += direction * distance;
+            Impact(closest);
             return;
         }
-
-        Destroy(gameObject);
+        transform.position += displacement;
     }
-
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            return;
-        }
-
-        if (particleEffect != null)
-        {
-            Instantiate(particleEffect, transform.position, Quaternion.identity);
-        }
-
-        if (other.CompareTag("Enemy"))
-        {
-            EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
-            enemyHealth.TakeDamage(damage);
-        }
-        AudioSource.PlayClipAtPoint(hitSFX, transform.position);
+        if (other.isTrigger || other.GetComponentInParent<PlayerController>() != null) return;
+        Impact(other);
+    }
+    private void Impact(Collider other)
+    {
+        if (hit) return;
+        hit = true;
+        if (particleEffect != null) Instantiate(particleEffect, transform.position, Quaternion.identity);
+        var crate = other.GetComponentInParent<DestructibleCrate>();
+        if (crate != null) crate.TakeDamage(damage);
+        var enemy = other.GetComponentInParent<EnemyHealth>();
+        if (enemy != null) enemy.TakeDamage(damage);
+        if (hitSFX != null) AudioSource.PlayClipAtPoint(hitSFX, transform.position);
         Destroy(gameObject);
     }
 }

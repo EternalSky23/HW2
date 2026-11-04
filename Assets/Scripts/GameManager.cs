@@ -1,216 +1,153 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     private static GameManager instance;
-
     [Header("Value Setup")]
     public float maxHealth = 100f;
     public float health = 100f;
-
     [Header("UI")]
     [SerializeField] private RectTransform healthBar;
-    [SerializeField] private TextMeshProUGUI timerText;    
-    [SerializeField] private TextMeshProUGUI enemyCounterText; 
+    [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private TextMeshProUGUI enemyCounterText;
     [SerializeField] private GameObject gameEndForeground;
-
     private float healthBarMaxWidth = 220f;
-
     [Header("Level & Enemy Tracking")]
-    public int remainingEnemies = 0;
-    private float elapsedTime = 0f;
+    public int remainingEnemies;
+    private float elapsedTime;
     private bool isGameActive = true;
+    private bool clearing;
+    public static bool IsActive => instance == null || instance.isGameActive;
+    public static float CurrentHealth => instance != null ? instance.health : 100;
+    public static float ElapsedTime => instance != null ? instance.elapsedTime : 0;
 
-    void Awake()
+    private void Awake()
     {
-        DontDestroyOnLoad(this);
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance != this)
-        {
-            Destroy(gameObject);
-        }
+        if (instance != null && instance != this) { Destroy(gameObject); return; }
+        instance = this;
+        DontDestroyOnLoad(gameObject);
     }
-
-    void OnEnable()
+    private void OnEnable() { if (instance == null) instance = this; SceneManager.sceneLoaded += OnSceneLoaded; }
+    private void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
+    private void Start()
     {
-        SceneManager.sceneLoaded += OnSceneLoaded;
+        if (instance != this) return;
+        RefreshUIReferences(); InitStage(); UpdateHealthBar();
     }
-
-    void OnDisable()
+    private void Update()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        RefreshUIReferences();
-        InitStage();
-        UpdateHealthBar();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (!isGameActive) return;
+        if (instance != this || !isGameActive || SceneManager.GetActiveScene().name == "Start") return;
+        if (SceneTransition.Instance != null && SceneTransition.Instance.Busy) return;
         elapsedTime += Time.deltaTime;
         UpdateTimerUI();
     }
-
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        RefreshUIReferences();
-        InitStage();
-        UpdateHealthBar();
+        if (instance != this) return;
+        clearing = false;
+        RefreshUIReferences(); InitStage(); UpdateHealthBar(); UpdateTimerUI();
     }
-
     private void RefreshUIReferences()
     {
-        if (timerText == null)
-        {
-            GameObject tObj = GameObject.Find("Timer");
-            if (tObj != null) timerText = tObj.GetComponent<TextMeshProUGUI>();
-        }
-
-        if (enemyCounterText == null)
-        {
-            GameObject eObj = GameObject.Find("EnemyCounter");
-            if (eObj != null) enemyCounterText = eObj.GetComponent<TextMeshProUGUI>();
-        }
-
-        if (healthBar == null)
-        {
-            GameObject hpObj = GameObject.Find("Health");
-            if (hpObj != null) healthBar = hpObj.GetComponent<RectTransform>();
-        }
-
-        if (gameEndForeground == null)
-        {
-            GameObject canvas = GameObject.Find("Canvas");
-            gameEndForeground = canvas.transform.Find("Foreground").gameObject;
-        }
+        timerText = GameObject.Find("Timer")?.GetComponent<TextMeshProUGUI>();
+        enemyCounterText = GameObject.Find("EnemyCounter")?.GetComponent<TextMeshProUGUI>();
+        healthBar = GameObject.Find("Health")?.GetComponent<RectTransform>();
+        var canvas = GameObject.Find("Canvas");
+        gameEndForeground = canvas != null ? canvas.transform.Find("Foreground")?.gameObject : null;
     }
-
     public void InitStage()
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        remainingEnemies = enemies.Length;
+        remainingEnemies = 0;
+        foreach (var enemy in FindObjectsOfType<EnemyHealth>())
+            if (!enemy.IsDead) remainingEnemies++;
         UpdateEnemyCounterUI();
-        Debug.Log($"���W��쪺�ĤH�ƶq: {enemies.Length}");
     }
-
+    public static void RefreshEnemies() { if (instance != null) instance.InitStage(); }
+    public static void RestoreProgress(float savedHealth, float savedElapsed)
+    {
+        if (instance == null) return;
+        instance.health = Mathf.Clamp(savedHealth, 1, instance.maxHealth);
+        instance.elapsedTime = Mathf.Max(0, savedElapsed);
+        instance.UpdateHealthBar(); instance.UpdateTimerUI();
+    }
     private void UpdateTimerUI()
     {
-        if (timerText != null)
-        {
-            int minutes = Mathf.FloorToInt(elapsedTime / 60F);
-            int seconds = Mathf.FloorToInt(elapsedTime % 60F);
-            timerText.text = string.Format("Time: {0:00}:{1:00}", minutes, seconds);
-        }
+        if (timerText != null) timerText.text = string.Format("Time: {0:00}:{1:00}",
+            Mathf.FloorToInt(elapsedTime / 60), Mathf.FloorToInt(elapsedTime % 60));
     }
-
     private void UpdateEnemyCounterUI()
     {
-        if (enemyCounterText != null)
-        {
-            enemyCounterText.text = $"Enemies Left: {remainingEnemies}";
-        }
+        if (enemyCounterText != null) enemyCounterText.text = $"Enemies Left: {remainingEnemies}";
     }
-
     public static void Heal(float value)
     {
+        if (instance == null || !instance.isGameActive) return;
         instance.health = Math.Min(instance.maxHealth, instance.health + value);
         instance.UpdateHealthBar();
     }
-
     public static void TakeDamage(float value)
     {
-        instance.health -= value;
+        if (instance == null || !instance.isGameActive || !AdvancedGame.CanControl) return;
+        instance.health = Mathf.Max(0, instance.health - value);
         instance.UpdateHealthBar();
-
-        if (instance.health <= 0) {
-            instance.GameLose();
-        }
+        if (instance.health <= 0) instance.GameOverHandle(false);
     }
-
     private void UpdateHealthBar()
     {
-        if (healthBar != null)
-        {
-            healthBar.sizeDelta = new Vector2(healthBarMaxWidth * (health / maxHealth), healthBar.sizeDelta.y);
-        }
+        if (healthBar != null) healthBar.sizeDelta = new Vector2(healthBarMaxWidth * (health / maxHealth), healthBar.sizeDelta.y);
     }
-
     public static void OnEnemyKilled()
     {
-        if (instance == null) return;
-
-        instance.remainingEnemies--;
-        if (instance.remainingEnemies < 0) instance.remainingEnemies = 0;
+        if (instance == null || !instance.isGameActive) return;
+        instance.remainingEnemies = Mathf.Max(0, instance.remainingEnemies - 1);
         instance.UpdateEnemyCounterUI();
-
-        if (instance.remainingEnemies <= 0)
-        {
-            instance.StartCoroutine(instance.StageClearRoutine());
-        }
+        if (instance.remainingEnemies == 0) CompleteStage();
     }
-
+    public static void CompleteStage()
+    {
+        if (instance == null || instance.clearing) return;
+        instance.clearing = true;
+        instance.StartCoroutine(instance.StageClearRoutine());
+    }
     private IEnumerator StageClearRoutine()
     {
-        Debug.Log("�����Ҧ��ĤH�w�����I�ǳƫe���U�@��...");
-        yield return new WaitForSeconds(2.0f);
-
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentSceneIndex + 1;
-
-        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        yield return new WaitForSeconds(2);
+        if (!isGameActive) yield break;
+        int next = SceneManager.GetActiveScene().buildIndex + 1;
+        if (next < SceneManager.sceneCountInBuildSettings)
         {
-            SceneManager.LoadScene(nextSceneIndex);
+            string path = SceneUtility.GetScenePathByBuildIndex(next);
+            SceneTransition.Load(System.IO.Path.GetFileNameWithoutExtension(path));
         }
-        else
-        {
-            Debug.Log("Game Win");
-            //Game Win UI
-            instance.GameOverHandle(true);
-        }
+        else GameOverHandle(true);
     }
-
-    private void GameLose()
-    {
-        Debug.Log("Game Over");
-        //Game Over UI
-        instance.GameOverHandle(false);
-    }
-
     private void GameOverHandle(bool win)
     {
         isGameActive = false;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        if (gameEndForeground == null) return;
         gameEndForeground.SetActive(true);
-        if (win)
-        {
-            gameEndForeground.transform.Find("Win").gameObject.SetActive(true);
-        }
-        else
-        {
-            gameEndForeground.transform.Find("Lose").gameObject.SetActive(true);
-        }
+        var panel = gameEndForeground.transform.Find(win ? "Win" : "Lose");
+        if (panel != null) panel.gameObject.SetActive(true);
     }
-
+    public static void ResetRun()
+    {
+        if (instance == null) return;
+        // Disable now, because Destroy is deferred until the end of the frame.
+        instance.gameObject.SetActive(false);
+        Destroy(instance.gameObject);
+        instance = null;
+    }
     public static void ReturnToTitle()
     {
-        SceneManager.LoadScene("Start");
-        Destroy(instance.gameObject);
+        if (SceneTransition.Instance != null && SceneTransition.Instance.Busy) return;
+        if (AdvancedGame.Instance != null) AdvancedGame.Instance.SetPaused(false);
+        ResetRun();
+        SceneTransition.Load("Start");
     }
 }

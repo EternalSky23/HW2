@@ -27,6 +27,6 @@ public class Menu : MonoBehaviour
 
     public void GameStart()
     {
-        SceneManager.LoadScene("Stage 1");
+        AdvancedGame.Instance.NewGame();
     }
 }

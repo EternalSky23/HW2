@@ -26,6 +26,7 @@ public class CameraLook : MonoBehaviour
 
     void LateUpdate()
     {
+        if (!AdvancedGame.CanControl) return;
         // Åª¨ú·Æ¹«·Æ°Ê
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
