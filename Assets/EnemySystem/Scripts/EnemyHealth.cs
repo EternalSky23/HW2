@@ -9,6 +9,10 @@ public class EnemyHealth : MonoBehaviour
     private float currentHealth;
     private bool isDead = false;
 
+    public float CurrentHealth => currentHealth;
+    public bool IsDead => isDead;
+    public void RestoreHealth(float value) { currentHealth = Mathf.Clamp(value, 1, maxHealth); }
+
     private Animator animator;
     private NavMeshAgent agent;
     private EnemyAI enemyAI;

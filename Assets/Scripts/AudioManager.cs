@@ -13,6 +13,15 @@ public class AudioManager : MonoBehaviour
 
     private AudioSource audioSource;
 
+    // Save files can start directly in Stage 2/3, where no scene AudioManager exists.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Initialize()
+    {
+        if (instance != null) return;
+        var prefab = Resources.Load<GameObject>("AudioManager");
+        if (prefab != null) Instantiate(prefab);
+    }
+
     void Awake()
     {
         // 確保跨場景只有一個 AudioManager 存在
@@ -29,6 +38,7 @@ public class AudioManager : MonoBehaviour
         else if (instance != this)
         {
             // 如果切換場景後又讀到新的 AudioManager，立刻銷毀自己，防止兩首音樂重疊
+            GetComponent<AudioSource>().Stop();
             Destroy(gameObject);
         }
     }
