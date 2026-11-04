@@ -15,6 +15,7 @@ public class EnemyAI : MonoBehaviour
     public float attackCooldown = 2f;
     public float attackDuration = 1f;
     public float attackDamage = 5f;
+    public AudioClip hitSFX;
 
     [Header("Ranged Attack")]
     public bool isRanged = false;
@@ -23,6 +24,8 @@ public class EnemyAI : MonoBehaviour
     [Header("Heavy Attack")]
     public bool isHeavy = false;
     public GameObject shockwavePrefab;
+    public AudioClip heavyHitSFX;
+
 
     private NavMeshAgent agent;
     private Animator animator;
@@ -127,6 +130,10 @@ public class EnemyAI : MonoBehaviour
                 if (!isRanged && !isHeavy)
                 {
                     GameManager.TakeDamage(attackDamage);
+                    if (hitSFX != null)
+                    {
+                        AudioSource.PlayClipAtPoint(hitSFX, transform.position);
+                    }
                 }
             }
 
@@ -220,6 +227,11 @@ public class EnemyAI : MonoBehaviour
 
         Vector3 spawnPosition =
             transform.position + Vector3.up * 0.05f;
+
+        if (heavyHitSFX != null)
+        {
+            AudioSource.PlayClipAtPoint(heavyHitSFX, spawnPosition);
+        }
 
         Instantiate(
             shockwavePrefab,

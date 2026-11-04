@@ -9,6 +9,7 @@ public class Bullet : MonoBehaviour
     public float timeAlive = 5f;
     public float damage = 0f;
     public GameObject particleEffect;
+    public AudioClip hitSFX;
 
     private float destroyTime;
 
@@ -47,6 +48,7 @@ public class Bullet : MonoBehaviour
             EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
             enemyHealth.TakeDamage(damage);
         }
+        AudioSource.PlayClipAtPoint(hitSFX, transform.position);
         Destroy(gameObject);
     }
 }

@@ -117,11 +117,13 @@ MonoBehaviour:
   attackCooldown: 3
   attackDuration: 1.5
   attackDamage: 5
+  hitSFX: {fileID: 0}
   isRanged: 0
   projectilePrefab: {fileID: 0}
   isHeavy: 1
   shockwavePrefab: {fileID: 1372898462283752139, guid: 74ed76bc21deb9c46981baff5397ccfc,
     type: 3}
+  heavyHitSFX: {fileID: 8300000, guid: fbb9d5b249c54974098c47b3ead83889, type: 3}
 --- !u!195 &257377225
 NavMeshAgent:
   m_ObjectHideFlags: 0
