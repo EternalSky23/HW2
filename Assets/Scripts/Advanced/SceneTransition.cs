@@ -34,8 +34,31 @@ public class SceneTransition : MonoBehaviour
         while (!operation.isDone) yield return null;
         // Let scene initialization and the save restore finish behind the black screen.
         yield return null;
+        if (scene.StartsWith("Stage ")) yield return RefreshEnvironment();
         yield return Fade(0);
         Busy = false;
+    }
+
+    private IEnumerator RefreshEnvironment()
+    {
+        // Unbaked scenes loaded from the title may have a zero ambient probe in Unity 2021.
+        // Render the new sky environment and keep the fade black during GPU readback.
+        DynamicGI.UpdateEnvironment();
+        yield return null;
+        yield return null;
+        float deadline = Time.realtimeSinceStartup + 2f;
+        while (!HasAmbientProbe() && Time.realtimeSinceStartup < deadline) yield return null;
+        if (!HasAmbientProbe())
+            Debug.LogWarning("Scene environment lighting is still empty after refresh; generate Lighting Data for this scene.");
+    }
+
+    private static bool HasAmbientProbe()
+    {
+        var probe = RenderSettings.ambientProbe;
+        float energy = 0;
+        for (int color = 0; color < 3; color++)
+            for (int coefficient = 0; coefficient < 9; coefficient++) energy += Mathf.Abs(probe[color, coefficient]);
+        return energy > .0001f;
     }
 
     private IEnumerator Fade(float target)
